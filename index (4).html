@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Message-Passing Lab — MPI & PVM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--m:#8a97c0;--ui:'Sora',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;color:#e6ecff;font-family:var(--ui);min-height:100vh;background:radial-gradient(1000px 500px at 5% -10%,#1d1150,transparent 60%),radial-gradient(800px 500px at 100% 0,#053246,transparent 55%),#060914}
+.mono,.code,code,.chip,.lbl{font-family:var(--mono);font-variant-ligatures:none}
+code{color:#67e8f9;font-size:.9em}
+.neon{background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.panel{border-radius:1rem;padding:1rem;background:rgba(12,18,42,.75);box-shadow:0 0 0 1px #1e2850}
+.tab,.btn{padding:.5rem .9rem;border:1px solid #26305a;border-radius:.7rem;background:#0b1128;color:var(--m);cursor:pointer;transition:.2s;font:inherit;font-size:.85rem}
+.tab:hover,.btn:hover:not(:disabled){color:#fff;border-color:#a78bfa}
+.tab.on,.btn.on{color:#fff;border-color:#22d3ee;box-shadow:0 0 18px #22d3ee55,inset 0 0 12px #a78bfa33;background:linear-gradient(135deg,#0e2a4a,#2a1454)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+#stage{position:relative;border-radius:1rem;padding:1rem;background:rgba(9,14,34,.8);box-shadow:0 0 0 1px #1e2850,0 0 40px #22d3ee14;overflow:hidden}
+.g4{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:640px){.g4{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1100px){.g4{grid-template-columns:repeat(4,1fr)}}
+.g2{display:grid;gap:1rem;grid-template-columns:1fr}
+@media(min-width:800px){.g2{grid-template-columns:1fr 120px 1fr}}
+.net{display:grid;place-items:center;min-height:56px;border:1px dashed #22d3ee66;border-radius:.9rem;color:#22d3ee;font-size:.75rem;letter-spacing:.12em;background:repeating-linear-gradient(90deg,#22d3ee14 0 8px,transparent 8px 16px);animation:nt 1.2s linear infinite}
+@keyframes nt{to{background-position:16px 0}}
+.pb{border:1px solid var(--a);border-radius:.9rem;padding:.7rem;background:linear-gradient(180deg,color-mix(in srgb,var(--a) 14%,#0b1128),#0a0f22);box-shadow:0 0 22px color-mix(in srgb,var(--a) 25%,transparent)}
+.ph{font-weight:700;color:var(--a);margin-bottom:.3rem}
+.sec{font-size:.7rem;color:var(--m);margin:.5rem 0 .3rem}
+.cell{border:1px dashed #33407a;border-radius:.6rem;padding:.35rem .45rem;margin-bottom:.4rem;background:#070c1c;transition:.3s}
+.lbl{font-size:.68rem;color:var(--m);margin-bottom:.25rem}
+.slots{display:flex;gap:.3rem;flex-wrap:wrap}
+.slot{position:relative;width:46px;height:40px;border:1px solid #2b3766;border-radius:.4rem;display:grid;place-items:center;background:#0a1024}
+.slot::before{content:attr(data-i);position:absolute;top:0;left:3px;font-size:.55rem;color:#5b6a9c}
+.chip{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;min-width:32px;height:26px;padding:0 .2rem;border-radius:.4rem;font-size:.74rem;font-weight:700;color:#06101f;background:var(--c);box-shadow:0 0 12px var(--c)}
+.chip::before{content:'['}.chip::after{content:']'}
+.pk{position:absolute;left:0;top:0;z-index:5;will-change:transform;min-width:38px;height:30px}
+.glow{border-color:#5eead4;border-style:solid;box-shadow:0 0 20px #5eead4aa,inset 0 0 12px #5eead455}
+.pop .slot{animation:pop .8s ease}
+@keyframes pop{50%{transform:translateY(-8px) scale(1.15);box-shadow:0 0 18px #f0abfc}}
+.code{font-size:.72rem;line-height:1.6;background:#050814;border-radius:.5rem;padding:.4rem;overflow-x:auto}
+.ln{padding:0 .3rem;border-left:3px solid transparent;color:#7b88b5;white-space:pre-wrap;word-break:break-all;transition:.25s}
+.ln.on{background:linear-gradient(90deg,#22d3ee33,transparent);border-color:#22d3ee;color:#fff}
+#ov,#pk{position:absolute;inset:0;pointer-events:none}
+#ov{width:100%;height:100%;z-index:4}
+.ar{fill:none;stroke-width:2;stroke-dasharray:6 6;opacity:.75;animation:dash 1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-24}}
+.opw{display:flex;justify-content:center;margin-bottom:1rem}
+.opn{min-width:230px;text-align:center;border-color:#fb923c;background:#1a1006}
+.opn .slots{justify-content:center}
+.opb{font:700 1.15rem var(--mono);color:#fb923c;text-shadow:0 0 12px #fb923c}
+input[type=range]{width:100%;accent-color:#22d3ee}
+#bar{height:4px;background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6);border-radius:9px;transition:width .4s;width:0}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head>
+<body>
+<div class="max-w-7xl mx-auto p-4 md:p-6">
+<header class="mb-4"><h1 class="text-2xl md:text-4xl font-bold neon">Message-Passing Computing</h1>
+<p class="text-sm mt-1" style="color:var(--m)">Simulasi interaktif MPI &amp; PVM: kirim-terima, broadcast, scatter, gather, dan reduce.</p></header>
+<nav id="tabs" class="flex flex-wrap gap-2 mb-4"></nav>
+<div id="stage"><div id="in"></div><svg id="ov"></svg><div id="pk"></div></div>
+<section class="grid gap-4 mt-4 lg:grid-cols-3">
+<div class="panel">
+<div class="flex flex-wrap gap-2 mb-3">
+<button class="btn" id="bPlay">▶ Play Auto</button><button class="btn" id="bPause">⏸ Pause</button>
+<button class="btn" id="bPrev">◀ Prev Step</button><button class="btn" id="bNext">Next Step ▶</button>
+<button class="btn" id="bReset">↺ Reset</button></div>
+<label class="text-xs" style="color:var(--m)">Kecepatan animasi: <b id="sv" class="text-white">1×</b></label>
+<input type="range" id="sp" min=".5" max="3" step=".25" value="1">
+</div>
+<div class="panel lg:col-span-2">
+<div class="flex justify-between text-xs mb-2" style="color:var(--m)"><span>Penjelasan langkah</span><b id="cnt" class="text-white"></b></div>
+<div id="bar" class="mb-3"></div>
+<p id="txt" class="text-sm leading-relaxed"></p>
+</div></section>
+<section class="panel mt-4"><h2 class="font-bold mb-2">Cuplikan kode C</h2><pre id="src" class="code"></pre></section>
+</div>
+<script>
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const AC=['#22d3ee','#a78bfa','#f472b6','#facc15'],CL={10:'#22d3ee',20:'#a78bfa',30:'#f472b6',40:'#facc15',99:'#4ade80',100:'#fb923c'};
+const colorOf=v=>CL[v]||'#22d3ee',E=n=>Array(n).fill(null),R=[0,1,2,3],all=l=>[l,l,l,l],has=(c,l)=>[].concat(c).includes(l);
+const fill=f=>Object.fromEntries(R.map(k=>[`p${k}-data`,f(k)])),dg=R.map(k=>`p${k}-data`),V=k=>10*(k+1);
+const P4=bn=>R.map(k=>({t:'Process '+k+(k?'':' (Root)'),a:AC[k],cells:(k?[]:[{k:'buf',l:'buf',n:bn}]).concat([{k:'data',l:'data',n:1}])}));
+const code4=(a,b,c)=>R.map(()=>[a,b,c]);
+const MODES={
+p2p:{n:'1 · Point-to-Point & Buffering',cls:'g2',net:1,
+ procs:[{t:'Process 1 (Pengirim)',a:AC[0],cells:[{k:'x',l:'source x[ ]',n:3},{k:'sbuf',l:'Send Buffer',n:3}]},{t:'Process 2 (Penerima)',a:AC[2],cells:[{k:'rbuf',l:'Message / Receive Buffer',n:3},{k:'y',l:'data y[ ]',n:3}]}],
+ code:[['int x[3]={10,20,30};','pvm_pkint(x,3,1); // pack → send buf','pvm_send(tid2,tag); // kirim','/* continue process */'],['pvm_recv(tid1,tag); // terima','pvm_upkint(y,3,1); // unpack → y']],
+ init:{'p0-x':[10,20,30],'p0-sbuf':E(3),'p1-rbuf':E(3),'p1-y':E(3)},
+ steps:[
+ {t:'<b>Langkah 1 — Source:</b> data awal berada di array sumber <code>x = [10, 20, 30]</code> pada Process 1. Send Buffer, Receive Buffer, dan <code>y</code> masih kosong.',c:[0,-1],g:['p0-x']},
+ {t:'<b>Langkah 2 — Source → Send Buffer:</b> <code>send()</code> / <code>pvm_pkint()</code> dipanggil. Elemen <code>x</code> di-<i>pack</i> (disalin) ke Send Buffer milik Process 1.',c:[1,-1],mv:[0,1,2].map(j=>[`p0-x-${j}`,`p0-sbuf-${j}`,V(j)]),set:{'p0-sbuf':[10,20,30]}},
+ {t:'<b>Langkah 3 — Transmisi:</b> paket bergerak dari Send Buffer melewati jaringan ke Receive Buffer Process 2. Process 1 tidak menunggu dan bisa <i>lanjut bekerja</i> (continue process).',c:[[2,3],-1],mv:[0,1,2].map(j=>[`p0-sbuf-${j}`,`p1-rbuf-${j}`,V(j)]),set:{'p1-rbuf':[10,20,30]}},
+ {t:'<b>Langkah 4 — Buffer → Destination Data:</b> Process 2 memanggil <code>recv()</code> / <code>pvm_upkint()</code>. Data di-<i>unpack</i> dari Receive Buffer ke memori <code>y</code>. Selesai.',c:[-1,[0,1]],mv:[0,1,2].map(j=>[`p1-rbuf-${j}`,`p1-y-${j}`,V(j)]),set:{'p1-y':[10,20,30]},g:['p1-y']}]},
+bcast:{n:'2 · Broadcast',cls:'g4',procs:P4(1),code:code4('if(rank==0) buf=99;','bcast(buf,data,root=0);','// data==99 di semua proses'),
+ init:{'p0-buf':[99],...fill(()=>E(1))},
+ steps:[
+ {t:'<b>Langkah 1:</b> nilai <code>[99]</code> muncul di <code>buf</code> Process 0 (root). Semua proses mengeksekusi <code>bcast();</code>.',c:all(1),g:['p0-buf']},
+ {t:'<b>Langkah 2:</b> salinan <code>[99]</code> digandakan dan mulai keluar dari <code>buf</code> Process 0, satu salinan untuk tiap proses.',c:all(1),lift:['p0-buf']},
+ {t:'<b>Langkah 3:</b> paket <code>[99]</code> bergerak serentak lewat panah lengkung menuju <code>data</code> milik Process 0, 1, 2, dan 3.',c:all(1),mv:R.map(k=>['p0-buf-0',`p${k}-data-0`,99]),set:fill(()=>[99])},
+ {t:'<b>Langkah 4:</b> <code>data</code> di semua proses kini berisi <code>[99]</code> dan menyala: broadcast selesai.',c:all(2),g:dg}]},
+scatter:{n:'3 · Scatter',cls:'g4',procs:P4(4),code:code4('if(rank==0) buf={10,20,30,40};','scatter(buf,data,root=0);','// data = buf[rank]'),
+ init:{'p0-buf':[10,20,30,40],...fill(()=>E(1))},
+ steps:[
+ {t:'<b>Langkah 1:</b> di Process 0, <code>buf</code> berupa array 4 elemen dengan warna berbeda: [10] [20] [30] [40].',c:all(0),g:['p0-buf']},
+ {t:'<b>Langkah 2:</b> semua proses memanggil <code>scatter();</code>. Elemen array di <code>buf</code> terpisah berdasarkan indeksnya.',c:all(1),lift:['p0-buf']},
+ {t:'<b>Langkah 3:</b> elemen ke-<i>i</i> bergerak ke proses ke-<i>i</i>: buf[0]→P0, buf[1]→P1, buf[2]→P2, buf[3]→P3.',c:all(1),mv:R.map(k=>[`p0-buf-${k}`,`p${k}-data-0`,V(k)]),set:fill(k=>[V(k)])},
+ {t:'<b>Langkah 4:</b> setiap proses kini memegang 1 elemen spesifik di memori <code>data</code> masing-masing: 10, 20, 30, 40.',c:all(2),g:dg}]},
+gather:{n:'4 · Gather',cls:'g4',procs:P4(4),code:code4('data = 10*(rank+1);','gather(data,buf,root=0);','// buf={10,20,30,40} di root'),
+ init:{'p0-buf':E(4),...fill(k=>[V(k)])},
+ steps:[
+ {t:'<b>Langkah 1:</b> tiap proses punya nilai unik di <code>data</code>: 10, 20, 30, 40. <code>buf</code> Process 0 masih kosong <code>[ ][ ][ ][ ]</code>.',c:all(0),g:dg},
+ {t:'<b>Langkah 2:</b> semua proses memanggil <code>gather();</code>.',c:all(1),lift:dg},
+ {t:'<b>Langkah 3:</b> nilai dari <code>data</code> tiap proses bergerak ke <code>buf</code> Process 0 sesuai indeks (rank) prosesnya.',c:all(1),mv:R.map(k=>[`p${k}-data-0`,`p0-buf-${k}`,V(k)]),set:{'p0-buf':[10,20,30,40]}},
+ {t:'<b>Langkah 4:</b> <code>buf</code> Process 0 terisi lengkap: <code>[10][20][30][40]</code>.',c:all(2),g:['p0-buf']}]},
+reduce:{n:'5 · Reduce (+)',cls:'g4',op:1,procs:P4(1),code:code4('data = 10*(rank+1);','reduce(data,buf,SUM,root=0);','// buf=100 di root'),
+ init:{'p0-buf':E(1),op:E(1),...fill(k=>[V(k)])},
+ steps:[
+ {t:'<b>Langkah 1:</b> tiap proses punya nilai di <code>data</code>: 10, 20, 30, 40. <code>buf</code> Process 0 masih kosong.',c:all(0),g:dg},
+ {t:'<b>Langkah 2:</b> semua proses memanggil <code>reduce();</code> dengan operasi <code>( + )</code>.',c:all(1),lift:dg},
+ {t:'<b>Langkah 3:</b> nilai 10, 20, 30, dan 40 bergerak dan bertemu di node operasi <code>( + )</code>.',c:all(1),mv:R.map(k=>[`p${k}-data-0`,'op-0',V(k)]),g:['op']},
+ {t:'<b>Langkah 4:</b> node menjumlahkan semua nilai: 10 + 20 + 30 + 40 = <b>100</b>.',c:all(1),set:{op:[100]},ol:'10+20+30+40 = 100',lift:['op'],g:['op']},
+ {t:'<b>Langkah 5:</b> hasil akhir <code>[100]</code> masuk ke <code>buf</code> Process 0. Hanya root yang menerima hasil reduksi.',c:all(2),mv:[['op-0','p0-buf-0',100]],set:{'p0-buf':[100]},ol:'Σ = 100',g:['p0-buf']}]}};
+const SRC={
+p2p:`/* PVM */\n// Process 1 (pengirim)\nint x[3] = {10, 20, 30};\npvm_initsend(PvmDataDefault);\npvm_pkint(x, 3, 1);          // x -> send buffer\npvm_send(tid2, tag);         // kirim, lanjut bekerja\n// Process 2 (penerima)\npvm_recv(tid1, tag);         // -> receive buffer\npvm_upkint(y, 3, 1);         // receive buffer -> y\n\n/* MPI */\nMPI_Send(x, 3, MPI_INT, 1, tag, MPI_COMM_WORLD);\nMPI_Recv(y, 3, MPI_INT, 0, tag, MPI_COMM_WORLD, &status);`,
+bcast:`/* MPI */\nif (rank == 0) buf = 99;\nMPI_Bcast(&buf, 1, MPI_INT, 0, MPI_COMM_WORLD);\n\n/* PVM */\nif (me == 0) { pvm_initsend(PvmDataDefault); pvm_pkint(&buf, 1, 1); }\npvm_bcast("grup", tag);      // anggota lain: pvm_recv(-1, tag); pvm_upkint(&data, 1, 1);`,
+scatter:`/* MPI */\nMPI_Scatter(buf, 1, MPI_INT, &data, 1, MPI_INT, 0, MPI_COMM_WORLD);\n\n/* PVM */\npvm_scatter(&data, buf, 1, PVM_INT, tag, "grup", 0);`,
+gather:`/* MPI */\nMPI_Gather(&data, 1, MPI_INT, buf, 1, MPI_INT, 0, MPI_COMM_WORLD);\n\n/* PVM */\npvm_gather(buf, &data, 1, PVM_INT, tag, "grup", 0);`,
+reduce:`/* MPI */\nMPI_Reduce(&data, &buf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);\n\n/* PVM */\npvm_reduce(PvmSum, &data, 1, PVM_INT, tag, "grup", 0);`};
+let M,i=0,play=false,tok=0,lid=0;
+const spd=()=>+$('#sp').value,last=()=>M.steps.length-1;
+function stateAt(n){const s={...M.init};for(let k=1;k<=n;k++)Object.assign(s,M.steps[k].set||{});return s}
+function build(){
+ const box=(p,k)=>`<div class="pb" style="--a:${p.a}"><div class="ph">${p.t}</div><div class="sec">Action</div>${p.cells.map(c=>`<div class="cell" id="c-p${k}-${c.k}"><div class="lbl">${c.l}</div><div class="slots">${Array.from({length:c.n},(_,j)=>`<div class="slot" id="p${k}-${c.k}-${j}" data-i="${c.n>1?j:''}"></div>`).join('')}</div></div>`).join('')}<div class="sec">Code</div><div class="code">${M.code[k].map((l,j)=>`<div class="ln" data-l="${j}">${l}</div>`).join('')}</div></div>`;
+ const op=M.op?`<div class="opw"><div class="cell opn" id="c-op"><div class="lbl">node operasi reduce</div><div class="opb" id="opb"></div><div class="slots"><div class="slot" id="op-0"></div></div></div></div>`:'';
+ const b=M.procs.map(box);if(M.net)b.splice(1,0,'<div class="net">NETWORK</div>');
+ $('#in').innerHTML=op+`<div class="${M.cls}">${b.join('')}</div>`;$('#src').textContent=SRC[M.key];
+}
+function paintState(n,base){
+ const S=stateAt(n),st=M.steps[n];
+ for(const id in S)S[id].forEach((v,j)=>{const e=$('#'+id+'-'+j);if(e)e.innerHTML=v==null?'':`<b class="chip" style="--c:${colorOf(v)}">${v}</b>`});
+ document.querySelectorAll('.glow,.pop').forEach(e=>e.classList.remove('glow','pop'));
+ if(base)return;void document.body.offsetWidth;
+ (st.g||[]).forEach(id=>$('#c-'+id).classList.add('glow'));(st.lift||[]).forEach(id=>$('#c-'+id).classList.add('pop'));
+}
+function info(n){
+ const st=M.steps[n];$('#txt').innerHTML=st.t;$('#cnt').textContent=`Langkah ${n+1} / ${M.steps.length}`;
+ document.querySelectorAll('.pb').forEach((b,k)=>b.querySelectorAll('.ln').forEach(l=>l.classList.toggle('on',has(st.c[k],+l.dataset.l))));
+ if(M.op)$('#opb').textContent=st.ol||'( + )';
+ $('#bar').style.width=n/last()*100+'%';ui();
+}
+function ui(){if(!M)return;$('#bPrev').disabled=i<1;$('#bNext').disabled=i>=last();$('#bPlay').classList.toggle('on',play)}
+const ctr=id=>{const r=$('#'+id).getBoundingClientRect(),s=$('#stage').getBoundingClientRect();return[r.left-s.left+r.width/2,r.top-s.top+r.height/2]};
+function bez(a,b){const A=ctr(a),B=ctr(b),dx=B[0]-A[0],dy=B[1]-A[1],L=Math.hypot(dx,dy)||1;let nx=dy/L,ny=-dx/L;if(ny>0){nx=-nx;ny=-ny}const k=Math.min(70,L*.3)+(L<60?25:0);return[A,[(A[0]+B[0])/2+nx*k,(A[1]+B[1])/2+ny*k],B]}
+function arrows(mv){$('#ov').innerHTML=(mv||[]).map(([a,b,v])=>{const[A,C,B0]=bez(a,b),c=colorOf(v),g=Math.atan2(B0[1]-C[1],B0[0]-C[0]),B=[B0[0]-18*Math.cos(g),B0[1]-18*Math.sin(g)],h=(d,r)=>`${B[0]+r*Math.cos(g+d)},${B[1]+r*Math.sin(g+d)}`;
+ return `<path d="M${A}Q${C} ${B}" class="ar" stroke="${c}"/><polygon points="${B} ${h(2.6,10)} ${h(-2.6,10)}" fill="${c}"/>`}).join('')}
+function fly([a,b,v],D,dl,t){return new Promise(async res=>{
+ await sleep(dl);if(t!==tok)return res();
+ const[A,C,B]=bez(a,b),e=document.createElement('b');e.className='chip pk';e.style.setProperty('--c',colorOf(v));e.textContent=v;$('#pk').append(e);
+ const t0=performance.now();
+ (function f(now){if(t!==tok){e.remove();return res()}
+  let u=Math.min(1,(now-t0)/D),w=u<.5?2*u*u:1-2*(1-u)*(1-u),q=1-w;
+  e.style.transform=`translate(${q*q*A[0]+2*q*w*C[0]+w*w*B[0]}px,${q*q*A[1]+2*q*w*C[1]+w*w*B[1]}px) translate(-50%,-50%) scale(${1+.25*Math.sin(u*Math.PI)})`;
+  u<1?requestAnimationFrame(f):(e.remove(),res())})(t0)})}
+function jump(n){++tok;i=n;info(n);paintState(n);arrows(M.steps[n].mv)}
+async function step(n){
+ const t=++tok,st=M.steps[n];i=n;info(n);
+ if(st.mv){paintState(n-1,1);arrows(st.mv);const D=1200/spd();await Promise.all(st.mv.map((m,k)=>fly(m,D,k*110/spd(),t)));if(t!==tok)return}else arrows();
+ paintState(n)}
+const stop=()=>{play=false;lid++;ui()};
+async function auto(){
+ if(play)return;play=true;const L=++lid;ui();
+ if(i>=last()){jump(0);await sleep(600/spd())}
+ while(play&&L===lid&&i<last()){await step(i+1);if(!play||L!==lid)break;await sleep(1000/spd())}
+ if(L===lid){play=false;ui()}}
+function setMode(k){stop();M=MODES[k];M.key=k;build();jump(0);document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.k===k))}
+$('#tabs').innerHTML=Object.entries(MODES).map(([k,m])=>`<button class="tab" data-k="${k}">${m.n}</button>`).join('');
+$('#tabs').onclick=e=>e.target.dataset.k&&setMode(e.target.dataset.k);
+$('#bPlay').onclick=auto;$('#bPause').onclick=()=>{play=false;ui()};
+$('#bNext').onclick=()=>{stop();if(i<last())step(i+1)};
+$('#bPrev').onclick=()=>{stop();if(i>0)jump(i-1)};
+$('#bReset').onclick=()=>{stop();jump(0)};
+$('#sp').oninput=e=>$('#sv').textContent=e.target.value+'×';
+addEventListener('resize',()=>jump(i));addEventListener('load',()=>jump(i));
+setMode('p2p');
+</script></body></html>
