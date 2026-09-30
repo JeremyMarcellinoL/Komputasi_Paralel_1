@@ -72,7 +72,8 @@ input[type=range]{width:100%;accent-color:#22d3ee}
 <div id="bar" class="mb-3"></div>
 <p id="txt" class="text-sm leading-relaxed"></p>
 </div></section>
-<section class="panel mt-4"><h2 class="font-bold mb-2">Cuplikan kode C</h2><pre id="src" class="code"></pre></section>
+<section class="panel mt-4"><div class="flex justify-between items-center"><h2 class="font-bold">Cuplikan kode C</h2><button class="btn" id="bSrc" aria-expanded="true" aria-controls="src">Sembunyikan</button></div><pre id="src" class="code mt-2"></pre></section>
+<footer class="text-center text-xs mt-8 pt-4" style="color:var(--m);border-top:1px solid #1e2850">Jeremy Marcellino L - 312410024 - Teknik Informatika '24 - Universitas Ma Chung</footer>
 </div>
 <script>
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -181,5 +182,6 @@ $('#bPrev').onclick=()=>{stop();if(i>0)jump(i-1)};
 $('#bReset').onclick=()=>{stop();jump(0)};
 $('#sp').oninput=e=>$('#sv').textContent=e.target.value+'×';
 addEventListener('resize',()=>jump(i));addEventListener('load',()=>jump(i));
+$('#bSrc').onclick=e=>{const p=$('#src'),h=p.style.display!=='none';p.style.display=h?'none':'';e.target.textContent=h?'Tampilkan':'Sembunyikan';e.target.setAttribute('aria-expanded',!h)};
 setMode('p2p');
 </script></body></html>
