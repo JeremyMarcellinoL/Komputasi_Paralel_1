@@ -2,12 +2,12 @@
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Message-Passing Lab — MPI & PVM</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--m:#8a97c0}
+:root{--m:#8a97c0;--ui:'Sora',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
 *{box-sizing:border-box}
-body{margin:0;color:#e6ecff;font-family:'Space Grotesk',system-ui,sans-serif;min-height:100vh;background:radial-gradient(1000px 500px at 5% -10%,#1d1150,transparent 60%),radial-gradient(800px 500px at 100% 0,#053246,transparent 55%),#060914}
-.mono,.code,code,.chip,.lbl{font-family:'JetBrains Mono',ui-monospace,monospace}
+body{margin:0;color:#e6ecff;font-family:var(--ui);min-height:100vh;background:radial-gradient(1000px 500px at 5% -10%,#1d1150,transparent 60%),radial-gradient(800px 500px at 100% 0,#053246,transparent 55%),#060914}
+.mono,.code,code,.chip,.lbl{font-family:var(--mono);font-variant-ligatures:none}
 code{color:#67e8f9;font-size:.9em}
 .neon{background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent}
 .panel{border-radius:1rem;padding:1rem;background:rgba(12,18,42,.75);box-shadow:0 0 0 1px #1e2850}
@@ -29,9 +29,9 @@ code{color:#67e8f9;font-size:.9em}
 .cell{border:1px dashed #33407a;border-radius:.6rem;padding:.35rem .45rem;margin-bottom:.4rem;background:#070c1c;transition:.3s}
 .lbl{font-size:.68rem;color:var(--m);margin-bottom:.25rem}
 .slots{display:flex;gap:.3rem;flex-wrap:wrap}
-.slot{position:relative;width:42px;height:40px;border:1px solid #2b3766;border-radius:.4rem;display:grid;place-items:center;background:#0a1024}
+.slot{position:relative;width:46px;height:40px;border:1px solid #2b3766;border-radius:.4rem;display:grid;place-items:center;background:#0a1024}
 .slot::before{content:attr(data-i);position:absolute;top:0;left:3px;font-size:.55rem;color:#5b6a9c}
-.chip{display:inline-grid;place-items:center;min-width:32px;height:26px;padding:0 .3rem;border-radius:.4rem;font-size:.8rem;font-weight:700;color:#06101f;background:var(--c);box-shadow:0 0 12px var(--c)}
+.chip{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;min-width:32px;height:26px;padding:0 .2rem;border-radius:.4rem;font-size:.74rem;font-weight:700;color:#06101f;background:var(--c);box-shadow:0 0 12px var(--c)}
 .chip::before{content:'['}.chip::after{content:']'}
 .pk{position:absolute;left:0;top:0;z-index:5;will-change:transform;min-width:38px;height:30px}
 .glow{border-color:#5eead4;border-style:solid;box-shadow:0 0 20px #5eead4aa,inset 0 0 12px #5eead455}
@@ -47,7 +47,7 @@ code{color:#67e8f9;font-size:.9em}
 .opw{display:flex;justify-content:center;margin-bottom:1rem}
 .opn{min-width:230px;text-align:center;border-color:#fb923c;background:#1a1006}
 .opn .slots{justify-content:center}
-.opb{font:700 1.15rem 'JetBrains Mono',monospace;color:#fb923c;text-shadow:0 0 12px #fb923c}
+.opb{font:700 1.15rem var(--mono);color:#fb923c;text-shadow:0 0 12px #fb923c}
 input[type=range]{width:100%;accent-color:#22d3ee}
 #bar{height:4px;background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6);border-radius:9px;transition:width .4s;width:0}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
